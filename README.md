@@ -30,17 +30,19 @@ Los scripts implementan y comparan los siguientes filtros de fusión sensorial:
 
 ## Estructura de Directorios
 
- comparacion_filtros.m      # Script de simulación
- prueba_filtros_real.m      # Script para datos reales
- Rotacion_3.mat             # Archivo de datos reales (rotación)
- Locura.mat                 # Archivo alternativo de datos reales
- prueba_dibujo.mat          # Archivo alternativo de datos reales
- GyroscopeIntegration/      # Funciones para integración de giroscopio
- AccelerometerMagnetometer/ # Funciones para procesar datos de acelerómetro
- EulerKF/                   # Implementación de Filtro de Kalman para ángulos de Euler
- EulerEKF/                  # Implementación de Filtro de Kalman Extendido
- EulerUKF/                  # Implementación de Filtro de Kalman Unscented
- Functions/                 # Funciones auxiliares generales
+El repositorio está organizado de la siguiente manera:
+
+- **comparacion_filtros.m** - Script de simulación
+- **prueba_filtros_real.m** - Script para datos reales
+- **Rotacion_3.mat** - Archivo de datos reales (rotación)
+- **Locura.mat** - Archivo alternativo de datos reales
+- **prueba_dibujo.mat** - Archivo alternativo de datos reales
+- **GyroscopeIntegration/** - Funciones para integración de giroscopio
+- **AccelerometerMagnetometer/** - Funciones para procesar datos de acelerómetro
+- **EulerKF/** - Implementación de Filtro de Kalman para ángulos de Euler
+- **EulerEKF/** - Implementación de Filtro de Kalman Extendido
+- **EulerUKF/** - Implementación de Filtro de Kalman Unscented
+- **Functions/** - Funciones auxiliares generales
 
 ## Uso del Script de Simulación
 
