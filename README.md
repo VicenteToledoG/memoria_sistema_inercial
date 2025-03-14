@@ -94,7 +94,3 @@ Ambos scripts evalúan los filtros utilizando varias métricas:
 ## Contribuciones
 
 Este proyecto está abierto a contribuciones. Si desea agregar nuevos filtros o mejorar los existentes, por favor cree un pull request con sus cambios.
-
-## Licencia
-
-[Insertar información de licencia aquí]
