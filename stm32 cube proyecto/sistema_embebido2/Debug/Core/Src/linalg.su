@@ -1,0 +1,8 @@
+../Core/Src/linalg.c:43:6:matmul	88	static
+../Core/Src/linalg.c:53:6:matmulsym	72	static
+../Core/Src/linalg.c:64:6:mateye	24	static
+../Core/Src/linalg.c:73:5:cholesky	64	static
+../Core/Src/linalg.c:115:6:trisolve	64	static
+../Core/Src/linalg.c:125:6:trisolveright	64	static
+../Core/Src/linalg.c:135:6:symmetricrankupdate	64	static
+../Core/Src/linalg.c:144:5:udu	40	static

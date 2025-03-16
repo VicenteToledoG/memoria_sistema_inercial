@@ -1,0 +1,13 @@
+../Core/Src/imu_estimation.c:11:13:eul2rotm	1
+../Core/Src/imu_estimation.c:41:13:rotm2eul	4
+../Core/Src/imu_estimation.c:75:6:EulerAccel	1
+../Core/Src/imu_estimation.c:80:6:initEulerTakasuState	4
+../Core/Src/imu_estimation.c:109:6:EulerTakasu	14
+../Core/Src/imu_estimation.c:197:6:multRotationMatrices	1
+../Core/Src/imu_estimation.c:202:6:rotateVector	1
+../Core/Src/imu_estimation.c:207:6:initIMUState	3
+../Core/Src/imu_estimation.c:225:6:transformAccelToGlobal	2
+../Core/Src/imu_estimation.c:268:6:processIMUData	1
+../Core/Src/imu_estimation.c:314:6:adjustEulerAngles	4
+../Core/Src/imu_estimation.c:322:6:fx	2
+../Core/Src/imu_estimation.c:345:6:Ajacob	1

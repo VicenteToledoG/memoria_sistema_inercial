@@ -1,0 +1,7 @@
+../Core/Src/miniblas.c:37:12:max	16	static
+../Core/Src/miniblas.c:46:5:lsame_	24	static
+../Core/Src/miniblas.c:51:5:strsm_	96	static
+../Core/Src/miniblas.c:519:5:sgemm_	104	static
+../Core/Src/miniblas.c:899:5:ssyrk_	88	static
+../Core/Src/miniblas.c:1275:5:ssymm_	104	static
+../Core/Src/miniblas.c:1632:5:strmm_	96	static
