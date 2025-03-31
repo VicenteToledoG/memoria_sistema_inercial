@@ -27,6 +27,7 @@ Los scripts implementan y comparan los siguientes filtros de fusión sensorial:
 
 - MATLAB (desarrollado y probado en MATLAB R2021b o posterior)
 - MATLAB Navigation Toolbox (para el filtro de referencia insfilterNonholonomic)
+- Sensor Fusion and Tracking Toolbox (esencial para implementar y evaluar los algoritmos de fusión sensorial)
 
 ## Estructura de Directorios
 
@@ -90,7 +91,3 @@ Ambos scripts evalúan los filtros utilizando varias métricas:
 - Error RMS (Root Mean Square) para aceleración, velocidad, posición y orientación
 - Error acumulado para las mismas variables
 - Tiempo de ejecución promedio de cada filtro
-
-## Contribuciones
-
-Este proyecto está abierto a contribuciones. Si desea agregar nuevos filtros o mejorar los existentes, por favor cree un pull request con sus cambios.

@@ -102,6 +102,7 @@ La parte de MATLAB proporciona herramientas para evaluar y comparar diferentes a
 
 - MATLAB (R2021b o posterior)
 - MATLAB Navigation Toolbox
+- Sensor Fusion and Tracking Toolbox (esencial para implementar y evaluar los algoritmos de fusión sensorial)
 
 ### Scripts Principales
 
