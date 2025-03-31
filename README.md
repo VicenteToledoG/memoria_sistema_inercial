@@ -1,17 +1,92 @@
-# Análisis Comparativo de Filtros de Fusión Sensorial para IMU
+# Sistema de Estimación de Orientación y Posición basado en IMU
 
-Este repositorio contiene scripts de MATLAB para evaluar y comparar diferentes algoritmos de fusión sensorial para IMUs (Unidades de Medición Inercial). Los algoritmos implementados estiman orientación, velocidad y posición a partir de datos de acelerómetro y giroscopio.
+Este repositorio contiene un sistema completo para la estimación de orientación y posición utilizando Unidades de Medición Inercial (IMU), dividido en dos componentes principales:
 
-## Contenido
+1. **Implementación en hardware** - Sistema embebido en STM32 Nucleo-F4 para estimación en tiempo real
+2. **Simulación y análisis** - Scripts de MATLAB para evaluar diferentes algoritmos de fusión sensorial
 
-El repositorio contiene dos scripts principales:
+El proyecto permite tanto realizar simulaciones y análisis comparativos de diferentes algoritmos de fusión sensorial en MATLAB, como implementar estos algoritmos en un sistema embebido real basado en un microcontrolador STM32.
 
-- **comparacion_filtros.m**: Evalúa los filtros utilizando datos simulados de una trayectoria predefinida.
-- **prueba_filtros_real.m**: Evalúa los filtros utilizando datos reales capturados de una IMU.
+## Visión General del Proyecto
 
-## Algoritmos Implementados
+El sistema integra:
+- Adquisición de datos de sensores inerciales (acelerómetro y giroscopio)
+- Implementación de diversos algoritmos de fusión sensorial
+- Estimación de ángulos de Euler (orientación), velocidad y posición
+- Evaluación comparativa de diferentes filtros
+- Implementación en tiempo real en hardware STM32
 
-Los scripts implementan y comparan los siguientes filtros de fusión sensorial:
+## Estructura del Repositorio
+
+```
+├── Hardware/                        # Implementación en STM32
+│   ├── Core/                        # Código fuente del sistema embebido
+│   │   ├── Inc/                     # Archivos de cabecera
+│   │   └── Src/                     # Archivos fuente
+│   ├── Drivers/                     # Controladores STM32
+│   └── [otros archivos STM32CubeIDE]
+│
+└── MATLAB/                         # Simulación y análisis
+    ├── comparacion_filtros.m       # Script de simulación con datos sintéticos
+    ├── prueba_filtros_real.m       # Script para procesar datos reales
+    ├── GyroscopeIntegration/       # Algoritmos de integración de giroscopio
+    ├── AccelerometerMagnetometer/  # Algoritmos para datos de acelerómetro
+    ├── EulerKF/                    # Implementación de Filtro de Kalman
+    ├── EulerEKF/                   # Implementación de Filtro de Kalman Extendido
+    ├── EulerUKF/                   # Implementación de Filtro de Kalman Unscented
+    ├── Functions/                   # Funciones auxiliares
+    └── *.mat                        # Archivos de datos reales para pruebas
+```
+
+## Parte 1: Implementación en Hardware (STM32)
+
+### Descripción
+
+El sistema embebido implementa algoritmos de fusión sensorial en una placa STM32 Nucleo-F4 que se comunica con un sensor IMU MPU6050 para estimar la orientación en tiempo real y transmitir los resultados mediante UART.
+
+### Hardware Requerido
+
+- Placa STM32 Nucleo-F4 (compatible con STM32F401RE, STM32F411RE, etc.)
+- Sensor IMU MPU6050
+- Conexión USB para programación y comunicación serial
+
+### Conexiones
+
+| MPU6050 | STM32 Nucleo-F4 |
+|---------|-----------------|
+| VCC     | 3.3V            |
+| GND     | GND             |
+| SCL     | PB8 (I2C1_SCL)  |
+| SDA     | PB9 (I2C1_SDA)  |
+| INT     | No utilizado    |
+
+### Requisitos de Software
+
+- STM32CubeIDE (versión 1.9.0 o superior)
+- Biblioteca HAL de STM para STM32F4
+
+### Configuración e Instalación
+
+1. Clonar o descargar este repositorio
+2. Abrir STM32CubeIDE
+3. Importar el proyecto desde la carpeta Hardware/
+4. Compilar y cargar el programa en la placa STM32
+
+### Protocolo de Comunicación
+
+El sistema envía los ángulos de Euler calculados a través de UART (115200 baudios, 8N1) con el siguiente formato:
+- 1 byte de sincronización (0xAA)
+- 4 bytes para el ángulo phi (roll) - formato float
+- 4 bytes para el ángulo theta (pitch) - formato float
+- 4 bytes para el ángulo psi (yaw) - formato float
+
+## Parte 2: Simulación y Análisis (MATLAB)
+
+### Descripción
+
+La parte de MATLAB proporciona herramientas para evaluar y comparar diferentes algoritmos de fusión sensorial, tanto con datos simulados como con datos reales capturados de IMUs.
+
+### Algoritmos Implementados
 
 - Filtro de Referencia de MATLAB (insfilterNonholonomic)
 - Filtro de Kalman Extendido (EKF)
@@ -23,74 +98,67 @@ Los scripts implementan y comparan los siguientes filtros de fusión sensorial:
 - Filtro Takasu Mejorado
 - Filtro Solo Acelerómetro (solo en simulación)
 
-## Requisitos
+### Requisitos
 
-- MATLAB (desarrollado y probado en MATLAB R2021b o posterior)
-- MATLAB Navigation Toolbox (para el filtro de referencia insfilterNonholonomic)
+- MATLAB (R2021b o posterior)
+- MATLAB Navigation Toolbox
 
-## Estructura de Directorios
+### Scripts Principales
 
-El repositorio está organizado de la siguiente manera:
+- **comparacion_filtros.m**: Evalúa los filtros utilizando datos simulados de una trayectoria predefinida.
+- **prueba_filtros_real.m**: Evalúa los filtros utilizando datos reales capturados de una IMU.
 
-- **comparacion_filtros.m** - Script de simulación
-- **prueba_filtros_real.m** - Script para datos reales
-- **Rotacion_3.mat** - Archivo de datos reales (rotación)
-- **Locura.mat** - Archivo alternativo de datos reales
-- **prueba_dibujo.mat** - Archivo alternativo de datos reales
-- **GyroscopeIntegration/** - Funciones para integración de giroscopio
-- **AccelerometerMagnetometer/** - Funciones para procesar datos de acelerómetro
-- **EulerKF/** - Implementación de Filtro de Kalman para ángulos de Euler
-- **EulerEKF/** - Implementación de Filtro de Kalman Extendido
-- **EulerUKF/** - Implementación de Filtro de Kalman Unscented
-- **Functions/** - Funciones auxiliares generales
+### Datos de Prueba
 
-## Uso del Script de Simulación
+El repositorio incluye varios archivos .mat con datos reales capturados de IMUs:
+- **Rotacion_3.mat** - Datos de rotación
+- **Locura.mat** - Datos alternativos
+- **prueba_dibujo.mat** - Datos alternativos
 
-El script `comparacion_filtros.m` genera una trayectoria sintética circular con orientación variable y simula las lecturas de una IMU. Luego ejecuta cada uno de los filtros y compara sus resultados con el ground truth conocido.
+## Flujo de Trabajo Completo
 
-Para ejecutar:
+El proyecto permite un flujo de trabajo completo:
 
-1. Asegúrese de que todos los directorios necesarios estén en el path de MATLAB.
-2. Abra el script `comparacion_filtros.m` en MATLAB.
-3. Ejecute el script completo.
-4. Examine los gráficos generados y los resultados de error RMS mostrados en la consola.
+1. **Fase de Investigación y Desarrollo**:
+   - Usar los scripts de MATLAB para simular diferentes escenarios
+   - Comparar el rendimiento de distintos algoritmos de fusión sensorial
+   - Determinar el algoritmo óptimo para su caso de uso específico
 
-## Uso del Script con Datos Reales
+2. **Fase de Implementación**:
+   - Implementar el algoritmo seleccionado en el sistema embebido STM32
+   - Ajustar parámetros como frecuencia de muestreo, calibración, etc.
+   - Evaluar el rendimiento en tiempo real
 
-El script `prueba_filtros_real.m` utiliza datos capturados de una IMU real, los procesa y evalúa el rendimiento de los diferentes filtros.
-
-Para ejecutar:
-
-1. Asegúrese de que los archivos .mat con los datos reales estén disponibles (Rotacion_3.mat, Locura.mat, prueba_dibujo.mat).
-2. Abra el script `prueba_filtros_real.m` en MATLAB.
-3. Descomente la línea correspondiente al conjunto de datos que desea utilizar.
-4. Ejecute el script completo.
-5. Examine los gráficos comparativos y los tiempos de ejecución mostrados.
+3. **Fase de Validación**:
+   - Capturar datos del sistema embebido
+   - Analizar los resultados con las herramientas de MATLAB
+   - Comparar con las simulaciones previas para validar el rendimiento
 
 ## Personalización
 
-### Parámetros de Simulación
+### Simulación en MATLAB
 
-En `comparacion_filtros.m` puede modificar:
+Puede modificar:
 - Frecuencia de muestreo (`imuFs`)
-- Parámetros de la trayectoria (`r`, `speed`, `numRevs`)
 - Parámetros de ruido de los sensores
+- Parámetros de los filtros
+- Trayectorias simuladas
 
-### Datos Reales
+### Implementación en Hardware
 
-En `prueba_filtros_real.m` puede:
-- Seleccionar diferentes conjuntos de datos (descomentando las líneas correspondientes)
-- Ajustar los parámetros de calibración para los datos raw del sensor
-- Modificar el número de muestras a procesar (`numsamples`)
+Puede ajustar:
+- Frecuencia de muestreo (modificando la configuración del Timer)
+- Parámetros de calibración del sensor
+- Frecuencia de transmisión de datos
+- Algoritmo de fusión implementado
 
-## Métricas de Evaluación
+## Aplicaciones Potenciales
 
-Ambos scripts evalúan los filtros utilizando varias métricas:
+Este sistema puede ser utilizado en varias aplicaciones:
 
-- Error RMS (Root Mean Square) para aceleración, velocidad, posición y orientación
-- Error acumulado para las mismas variables
-- Tiempo de ejecución promedio de cada filtro
-
-## Contribuciones
-
-Este proyecto está abierto a contribuciones. Si desea agregar nuevos filtros o mejorar los existentes, por favor cree un pull request con sus cambios.
+- Sistemas de navegación inercial
+- Estabilización de drones o vehículos
+- Captura de movimiento
+- Robótica
+- Realidad virtual y aumentada
+- Wearables para monitoreo de actividad física

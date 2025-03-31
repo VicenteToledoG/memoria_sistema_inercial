@@ -1,8 +1,9 @@
+
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body
+  * @brief          : Programa principal para estimación de orientación con IMU
   ******************************************************************************
   * @attention
   *
@@ -16,41 +17,47 @@
   ******************************************************************************
   */
 
-
+/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "linalg.h" // Incluye tu implementación de operaciones de álgebra lineal
-#include "miniblas.h" // Incluye tu implementación para cálculos de matrices
-#include "imu_estimation.h"
+#include "linalg.h"       // Implementación de operaciones de álgebra lineal
+#include "miniblas.h"     // Implementación para cálculos de matrices
+#include "imu_estimation.h" // Algoritmos de estimación para IMU
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN PV */
+/* Variables privadas ---------------------------------------------------------*/
+// Estructura para almacenar datos del sensor MPU6050
 MPU6050_t MPU6050;
-float accX, accY, accZ;
-float gyrX, gyrY, gyrZ;
-uint16_t sample_counter;
-int int_counter;
-uint8_t leer;
 
-/* Variables para almacenar resultados */
-float phi, theta, psi;           // Ángulos de Euler actuales
-float accelGlobal[1][3];        // Aceleración en marco global
-float velGlobal[1][3];          // Velocidad en marco global
-float posGlobal[1][3];          // Posición en marco global
+// Variables para almacenar lecturas de acelerómetro y giroscopio
+float accX, accY, accZ;  // Acelerómetro (m/s²)
+float gyrX, gyrY, gyrZ;  // Giroscopio (rad/s)
+
+// Contadores y variables de control
+uint16_t sample_counter; // Contador de muestras
+int int_counter;         // Contador de interrupciones
+uint8_t leer;            // Bandera para indicar cuando leer el sensor
+
+/* Variables para almacenar resultados de la estimación */
+float phi, theta, psi;   // Ángulos de Euler actuales (rad)
+float accelGlobal[1][3]; // Aceleración en marco global (m/s²)
+float velGlobal[1][3];   // Velocidad en marco global (m/s)
+float posGlobal[1][3];   // Posición en marco global (m)
 
 /* Variables de estado del sistema */
-IMUState imu_state;
-float dt = 0.0004f;             // Período de muestreo
+IMUState imu_state;      // Estado del sistema IMU
+float dt = 0.0004f;      // Período de muestreo (2500 Hz)
 /* USER CODE END PV */
 
-I2C_HandleTypeDef hi2c1;
+/* Definiciones de manipuladores de periféricos -------------------------------*/
+I2C_HandleTypeDef hi2c1;        // Manipulador para I2C1 (comunicación con MPU6050)
+TIM_HandleTypeDef htim1;        // Manipulador para Timer1 (muestreo periódico)
+UART_HandleTypeDef huart2;      // Manipulador para UART2 (comunicación con PC)
 
-TIM_HandleTypeDef htim1;
-
-UART_HandleTypeDef huart2;
-
+/* Prototipos de funciones ---------------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
@@ -58,6 +65,14 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
 
 /* USER CODE BEGIN 0 */
+/**
+  * @brief  Convierte la lectura cruda del acelerómetro a unidades físicas (m/s²)
+  * @param  raw: Valor crudo del sensor
+  * @param  maxRaw: Valor máximo del rango del sensor
+  * @param  minRaw: Valor mínimo del rango del sensor
+  * @param  center: Valor central (cero) del sensor
+  * @retval Aceleración en m/s²
+  */
 float convertAcc(float raw, float maxRaw, float minRaw, float center) {
     if (raw >= center) {
         return (raw - center) * (9.81 / (maxRaw - center));
@@ -66,6 +81,14 @@ float convertAcc(float raw, float maxRaw, float minRaw, float center) {
     }
 }
 
+/**
+  * @brief  Convierte la lectura cruda del giroscopio a unidades físicas (rad/s)
+  * @param  raw: Valor crudo del sensor
+  * @param  maxRaw: Valor máximo del rango del sensor
+  * @param  minRaw: Valor mínimo del rango del sensor
+  * @param  center: Valor central (cero) del sensor
+  * @retval Velocidad angular en rad/s
+  */
 float convertGyro(float raw, float maxRaw, float minRaw, float center) {
     if (raw >= center) {
         return (raw - center) * (3.0 / (maxRaw - center));
@@ -74,6 +97,13 @@ float convertGyro(float raw, float maxRaw, float minRaw, float center) {
     }
 }
 
+/**
+  * @brief  Envía los ángulos de Euler calculados por UART
+  * @note   Utiliza un protocolo simple con byte de sincronización (0xAA)
+  *         seguido por los valores de phi, theta y psi (4 bytes cada uno)
+  * @param  None
+  * @retval None
+  */
 void send_euler_angles(void) {
     uint8_t sync_byte = 0xAA;  // Byte de sincronización
     uint8_t bytes[4];
@@ -81,21 +111,21 @@ void send_euler_angles(void) {
     // Enviar byte de sincronización
     HAL_UART_Transmit(&huart2, &sync_byte, 1, HAL_MAX_DELAY);
 
-    // Enviar phi
+    // Enviar phi (ángulo de roll)
     memcpy(bytes, &phi, sizeof(float));
     HAL_UART_Transmit(&huart2, &bytes[3], 1, HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart2, &bytes[2], 1, HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart2, &bytes[1], 1, HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart2, &bytes[0], 1, HAL_MAX_DELAY);
 
-    // Enviar theta
+    // Enviar theta (ángulo de pitch)
     memcpy(bytes, &theta, sizeof(float));
     HAL_UART_Transmit(&huart2, &bytes[3], 1, HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart2, &bytes[2], 1, HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart2, &bytes[1], 1, HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart2, &bytes[0], 1, HAL_MAX_DELAY);
 
-    // Enviar psi
+    // Enviar psi (ángulo de yaw)
     memcpy(bytes, &psi, sizeof(float));
     HAL_UART_Transmit(&huart2, &bytes[3], 1, HAL_MAX_DELAY);
     HAL_UART_Transmit(&huart2, &bytes[2], 1, HAL_MAX_DELAY);
@@ -104,54 +134,63 @@ void send_euler_angles(void) {
 }
 /* USER CODE END 0 */
 
+/**
+  * @brief  Punto de entrada principal.
+  * @retval int
+  */
 int main(void)
 {
     /* USER CODE BEGIN 1 */
+    // Inicialización de variables
     sample_counter = 0;
     leer = 0;
-    int_counter=0;
-
+    int_counter = 0;
     /* USER CODE END 1 */
 
-    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-      HAL_Init();
+    /* Reset de todos los periféricos, inicialización de la interfaz Flash y Systick. */
+    HAL_Init();
 
-      /* USER CODE BEGIN Init */
+    /* USER CODE BEGIN Init */
+    /* USER CODE END Init */
 
-      /* USER CODE END Init */
+    /* Configuración del reloj del sistema */
+    SystemClock_Config();
 
-      /* Configure the system clock */
-      SystemClock_Config();
+    /* USER CODE BEGIN SysInit */
+    /* USER CODE END SysInit */
 
-      /* USER CODE BEGIN SysInit */
-
-      /* USER CODE END SysInit */
-
-      /* Initialize all configured peripherals */
-      MX_GPIO_Init();
-      MX_I2C1_Init();
-      MX_USART2_UART_Init();
-      MX_TIM1_Init();
-      /* USER CODE BEGIN 2 */
-      while (MPU6050_Init(&hi2c1) == 1);
-      if (HAL_TIM_Base_Start_IT(&htim1) != HAL_OK)
-      {
-        /* Starting Error */
+    /* Inicialización de todos los periféricos configurados */
+    MX_GPIO_Init();
+    MX_I2C1_Init();
+    MX_USART2_UART_Init();
+    MX_TIM1_Init();
+    
+    /* USER CODE BEGIN 2 */
+    // Inicialización del sensor MPU6050 (reintenta si falla)
+    while (MPU6050_Init(&hi2c1) == 1);
+    
+    // Iniciar el timer para el muestreo periódico
+    if (HAL_TIM_Base_Start_IT(&htim1) != HAL_OK)
+    {
+        /* Error al iniciar el timer */
         Error_Handler();
-      }
+    }
 
-      // Inicializar el estado del sistema IMU
-      initIMUState(&imu_state, dt);
+    // Inicializar el estado del sistema IMU con el periodo de muestreo
+    initIMUState(&imu_state, dt);
     /* USER CODE END 2 */
 
-    /* Infinite loop */
+    /* Bucle infinito */
     while (1)
     {
+        // Procesar datos cuando la interrupción del timer activa la bandera 'leer'
         if(leer) {
-            leer = 0;
+            leer = 0;  // Resetear bandera
+            
+            // Leer datos del sensor MPU6050
             MPU6050_Read_All(&hi2c1, &MPU6050);
 
-            // Convertir lecturas crudas a unidades físicas
+            // Convertir lecturas crudas a unidades físicas (calibración)
             accX = convertAcc(MPU6050.Accel_X_RAW, 17000, -16400, 0);
             accY = convertAcc(MPU6050.Accel_Y_RAW, 16400, -16500, 0);
             accZ = convertAcc(MPU6050.Accel_Z_RAW, 19350, -14600, 0);
@@ -159,7 +198,7 @@ int main(void)
             gyrY = convertGyro(MPU6050.Gyro_Y_RAW, 6500, -7600, -463);
             gyrZ = convertGyro(MPU6050.Gyro_Z_RAW, 7600, -7600, 200);
 
-            // Procesar datos IMU
+            // Procesar datos IMU para obtener ángulos de Euler y posición
             processIMUData(&imu_state,
                          accX, accY, accZ,
                          gyrX, gyrY, gyrZ,
@@ -169,7 +208,7 @@ int main(void)
 
             sample_counter++;
 
-            // Enviar ángulos de Euler cada 100 muestras
+            // Enviar ángulos de Euler cada 20 muestras (125 Hz con muestreo a 2500 Hz)
             if(sample_counter >= 20) {
                 send_euler_angles();
                 sample_counter = 0;
@@ -177,7 +216,6 @@ int main(void)
         }
     }
 }
-
 
 
 /**
